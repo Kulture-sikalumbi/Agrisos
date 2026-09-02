@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
   backBtnText: { color: COLORS.white, fontSize: 16, fontWeight: '700' },
   cameraHint: { color: COLORS.white, fontSize: 14, fontWeight: '600', flexShrink: 1 },
   frameWrapper: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -296,7 +296,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
   },
   analyzingOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     zIndex: 30,
     elevation: 30,
     backgroundColor: 'rgba(0,0,0,0.72)',

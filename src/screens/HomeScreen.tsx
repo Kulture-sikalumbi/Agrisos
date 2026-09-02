@@ -256,7 +256,7 @@ const styles = StyleSheet.create({
   },
   offlineText: { fontSize: 12, color: COLORS.grey, textAlign: 'center' },
   analyzingOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(0,0,0,0.72)',
     alignItems: 'center',
     justifyContent: 'center',
