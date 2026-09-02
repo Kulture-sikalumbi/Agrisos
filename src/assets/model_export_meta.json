@@ -1,0 +1,46 @@
+{
+  "model_path": "C:\\Users\\Administrator\\Desktop\\Agrisos\\AgrisosApp\\src\\assets\\model.tflite",
+  "class_order": [
+    "healthy",
+    "cmd",
+    "cbsd"
+  ],
+  "input": {
+    "size": {
+      "width": 224,
+      "height": 224
+    },
+    "dtype": "float32",
+    "normalization": {
+      "mean": 127.5,
+      "std": 127.5,
+      "formula": "(pixel - 127.5) / 127.5  # MobileNetV2 preprocess_input"
+    },
+    "center_crop": true
+  },
+  "confidence_threshold": 0.75,
+  "test_accuracy": 0.8242942094802856,
+  "test_loss": 0.4550841450691223,
+  "history": {
+    "accuracy": [
+      0.6929454207420349,
+      0.7679553627967834,
+      0.777999222278595,
+      0.7968114614486694
+    ],
+    "val_accuracy": [
+      0.7785634398460388,
+      0.7938221096992493,
+      0.7956829071044922,
+      0.8131745457649231
+    ]
+  },
+  "app_config": {
+    "file": "src/config/tfliteModelConfig.ts",
+    "classOrder": [
+      "healthy",
+      "cmd",
+      "cbsd"
+    ]
+  }
+}

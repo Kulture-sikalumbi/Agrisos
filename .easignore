@@ -1,0 +1,34 @@
+# Keep the EAS upload under 2 GB — app does not need training data / venv / local native builds.
+
+# ML training (not shipped in the app)
+ml/
+ml/**/*
+
+# Local native / build caches (EAS runs prebuild on the server)
+android/
+ios/
+.kotlin/
+*.apk
+*.aab
+
+# Dependencies (installed on EAS)
+node_modules/
+
+# Expo / tooling caches
+.expo/
+.expo-tmp-export*/
+dist/
+web-build/
+
+# Git / IDE / docs noise
+.git/
+.claude/
+docs/
+*.md
+!app.json
+
+# Misc
+**/.venv/
+**/__pycache__/
+**/*.pyc
+**/.DS_Store
