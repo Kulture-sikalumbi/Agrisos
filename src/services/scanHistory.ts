@@ -47,6 +47,18 @@ export async function getScanHistory(): Promise<ScanHistoryItem[]> {
   return readIndex();
 }
 
+export async function removeScanFromHistory(id: string): Promise<void> {
+  try {
+    const items = await readIndex();
+    const target = items.find((x) => x.id === id);
+    if (!target) return;
+    await FileSystem.deleteAsync(target.imageUri, { idempotent: true });
+    await writeIndex(items.filter((x) => x.id !== id));
+  } catch {
+    // ignore
+  }
+}
+
 export async function clearScanHistory(): Promise<void> {
   try {
     const items = await readIndex();

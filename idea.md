@@ -1,38 +1,46 @@
+What the project is
+Agrisos+ — an AI app for Zambian cassava farmers that diagnoses two diseases (Cassava Mosaic Disease and Cassava Brown Streak Disease) from a photo of a leaf, entirely offline, on cheap phones (<2GB RAM). Farmer takes a photo → on-device AI model analyzes it → app shows a simple red/yellow/green traffic-light result with an icon (no dense text) telling them: pull the plant, treat it, or it's fine.
+Core requirements from the doc:
 
-refactor and enhance our disease detection pipeline—specifically handling the edge models (TFLite/ONNX) and our Gemini cloud fallback prompt logic.
+Diagnosis in under 5 seconds, 100% offline (no server calls at all)
+Model must run on devices with <2GB RAM → this means model quantization (shrinking the AI model, FP32→INT8)
+≥85% accuracy target (realistic field accuracy, not lab-perfect)
+UI = icons + traffic-light colors, minimal/no text (literacy barrier)
+Built with TensorFlow Lite for on-device inference
+Methodology: CRISP-DM (for the AI model) + Scrum (for the app, 2-week sprints)
 
-Please help me implement the following improvements across our codebase:
+The simplest path to actually build it
+Think of it as two tracks that meet in the middle: train a small AI model → stick it in a basic mobile app.
+1. Get a cassava disease image dataset
+Don't collect your own photos from scratch — search Kaggle/GitHub for existing "Cassava Leaf Disease" datasets (there are public ones, e.g. from the Makerere/Kaggle cassava disease challenge). This alone can save you weeks.
+2. Train a small image classifier
 
----
+Use a lightweight pretrained model (MobileNetV2 or EfficientNet-Lite) and fine-tune it on the dataset — don't build a CNN from scratch.
+Train in Python (TensorFlow/Keras), classifying: CMD, CBSD, healthy/nutrient-deficient.
+Target 3 classes to keep it simple, not many disease subtypes.
 
-### 1. Gemini Cloud Fallback Prompt Refinement
-Update the system prompt used when sending images and edge-model predictions to Gemini for secondary confirmation.
+3. Convert & shrink the model for phones
 
-Requirements for the Prompt:
-- **Disambiguate CMD vs. CBSD:**
-  - Instruct Gemini to evaluate whether yellowing is an asymmetric/distorted mosaic pattern (typical of CMD) versus feathery chlorosis along secondary veins on non-distorted leaves (typical of CBSD).
-  - Explicitly prompt Gemini to ask or instruct the user to check for secondary physical signs (e.g., *"If CBSD is suspected, advise the user to inspect the roots for brown rot or check stems for brown streaks"*).
-- **Handle Natural Senescence & Abiotic Stress:**
-  - Add logic to check for uniform yellowing on older lower leaves while surrounding canopy leaves remain green. Categorize this as "Natural Leaf Shedding / Senescence" or "Abiotic Stress" rather than a panic-inducing viral outbreak.
-- **Severity Indexing:**
-  - Output a severity scale (Grade 1 to 5) when a disease is confirmed so the app can render appropriate, actionable advice (e.g., rogue immediately vs. monitor field).
-- **Structured JSON Output:**
-  - Ensure Gemini responds in a strict JSON schema containing:
-    `{ primary_diagnosis, confidence_assessment, severity_score, differential_diagnosis, immediate_action_steps, secondary_inspection_required }`
+Convert your trained model to TensorFlow Lite format.
+Apply INT8 quantization (one command in TFLite converter) — this is what makes it run on low-RAM phones fast.
 
----
+4. Build a minimal mobile app
 
-### 2. Edge Dataset & Inference Safeguards (Mobile Code / Preprocessing)
-Suggest and implement structural updates for our mobile/edge model handler:
+Use Flutter or plain Android (Kotlin) — Flutter is faster if you want one codebase.
+Just 3 screens: Camera/photo capture → Loading → Result (traffic light + icon).
+Embed the .tflite model directly in the app (no server, no API calls).
 
-- **Confidence Thresholding & Fallback Triggers:**
-  - If the offline model's top prediction confidence is below a defined threshold (e.g., < 80%) OR if the top two predicted classes (e.g., CMD vs. CBSD) have a narrow confidence delta, automatically queue or trigger the Gemini cloud call (if online).
-- **Image Preprocessing & Context Prompts:**
-  - When sending an image to Gemini, include bounding/context metadata if available, and prompt the user if the image quality is too low, blurry, or overexposed for fine vein analysis.
+5. Wire it together
 
----
+Camera takes photo → resize/preprocess image → feed into TFLite model → get prediction → map prediction to red/yellow/green result screen with icon.
 
-### Deliverables Needed:
-1. The complete, updated **System Prompt string/template** for the Gemini API call.
-2. The TypeScript/JSON TypeScript interfaces for parsing Gemini's structured response.
-3. The helper function/logic for determining when to fall back from the offline model to Gemini based on classification confidence scores.                  
+6. Test on a real cheap phone
+
+Check it runs under 2GB RAM and gives a result in <5 seconds.
+Check accuracy against a held-out test set (aim ≥85%).
+
+7. Polish UI
+
+Swap any text for icons, keep it to the traffic-light system as the doc specifies.
+
+and include a lil Chatbot....

@@ -7,11 +7,6 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "scheme": "agrisos",
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#F1F8E9"
-    },
     "runtimeVersion": {
       "policy": "appVersion"
     },
@@ -58,7 +53,16 @@
           "enableAndroidGpuLibraries": true
         }
       ],
-      "expo-updates"
+      "expo-updates",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#F1F8E9"
+        }
+      ],
+      "expo-asset"
     ],
     "web": {
       "favicon": "./assets/favicon.png"

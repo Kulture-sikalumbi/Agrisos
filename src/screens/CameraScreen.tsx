@@ -17,6 +17,7 @@ import { COLORS, RADIUS } from '../constants/theme';
 import type { RootStackParamList } from '../navigation/types';
 import { classifyImage } from '../services/classifier';
 import { useLanguage } from '../i18n/LanguageContext';
+import { confirmCassavaLeafPhoto } from '../utils/confirmCassavaPhoto';
 
 const { width } = Dimensions.get('window');
 
@@ -55,6 +56,8 @@ export default function CameraScreen({ navigation }: Props) {
       allowsEditing: false,
     });
     if (!result.canceled && result.assets[0]) {
+      const confirmed = await confirmCassavaLeafPhoto(t);
+      if (!confirmed) return;
       setAnalyzing(true);
       await runAnalysis(result.assets[0].uri);
     }

@@ -17,6 +17,7 @@ import type { RootStackParamList } from '../navigation/types';
 import { classifyImage } from '../services/classifier';
 import { useLanguage } from '../i18n/LanguageContext';
 import LanguagePicker from '../components/LanguagePicker';
+import { confirmCassavaLeafPhoto } from '../utils/confirmCassavaPhoto';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Home'>;
@@ -40,6 +41,9 @@ export default function HomeScreen({ navigation }: Props) {
     });
 
     if (result.canceled || !result.assets[0]) return;
+
+    const confirmed = await confirmCassavaLeafPhoto(t);
+    if (!confirmed) return;
 
     setAnalyzing(true);
     try {

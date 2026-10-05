@@ -16,9 +16,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { COLORS, RADIUS, SHADOW } from '../constants/theme';
-import { sendChatMessage, ChatMessage } from '../services/gemini';
 import type { RootStackParamList } from '../navigation/types';
 import { useLanguage } from '../i18n/LanguageContext';
+import type { UiStrings } from '../i18n/types';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Chatbot'>;
@@ -39,6 +39,26 @@ const QUICK_QUESTIONS = [
   'When should I call an extension officer?',
   'How do I keep a healthy field?',
 ];
+
+function getOfflineReply(message: string, strings: UiStrings): string {
+  const question = message.toLowerCase();
+  if (question.includes('cmd') || question.includes('mosaic')) {
+    return `${strings.diseases.cmd.advice}\n\n${strings.diseases.cmd.prevention}`;
+  }
+  if (question.includes('cbsd') || question.includes('brown streak')) {
+    return `${strings.diseases.cbsd.advice}\n\n${strings.diseases.cbsd.prevention}`;
+  }
+  if (question.includes('healthy') || question.includes('keep')) {
+    return `${strings.diseases.healthy.advice}\n\n${strings.diseases.healthy.prevention}`;
+  }
+  if (question.includes('whitefl')) {
+    return strings.diseases.healthy.treatment;
+  }
+  if (question.includes('cutting') || question.includes('stem')) {
+    return strings.diseases.healthy.prevention;
+  }
+  return `${strings.diseases.uncertain.advice}\n\n${strings.diseases.uncertain.treatment}`;
+}
 
 export default function ChatbotScreen({ navigation, route }: Props) {
   const { t, language } = useLanguage();
@@ -83,15 +103,7 @@ export default function ChatbotScreen({ navigation, route }: Props) {
     setLoading(true);
 
     try {
-      const history: ChatMessage[] = messages
-        .filter((m) => m.id !== '0')
-        .map((m) => ({ role: m.role, text: m.text }));
-
-      // Gemini always replies in simple English (UI may still be Bemba).
-      const reply = await sendChatMessage(
-        history,
-        messageText + ' Please reply in simple English, short sentences.'
-      );
+      const reply = getOfflineReply(messageText, t);
 
       setMessages((prev) => [
         ...prev,

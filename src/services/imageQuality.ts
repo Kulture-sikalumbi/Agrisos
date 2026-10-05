@@ -10,6 +10,7 @@ export type ImageRejectCode =
   | 'too_dark'
   | 'too_bright'
   | 'too_flat'
+  | 'not_leaf'
   | 'decode_failed';
 
 export type ImageQualityResult =
@@ -22,6 +23,8 @@ const REJECT_MESSAGES: Record<ImageRejectCode, string> = {
   too_bright: 'Photo is too bright / washed out. Avoid direct flash glare.',
   too_flat:
     'This does not look like a useful leaf photo (blank, blurry, or not a plant). Retake with one cassava leaf filling the frame.',
+  not_leaf:
+    'This does not look like a cassava leaf. Point the camera at one leaf so it fills the frame.',
   decode_failed: 'Could not read this image. Try another photo.',
 };
 
@@ -36,9 +39,57 @@ function base64ToUint8Array(base64: string): Uint8Array {
   return bytes;
 }
 
+/** Hue (degrees, 0-360) and saturation/value (0-1) from 8-bit RGB. */
+function rgbToHsv(r: number, g: number, b: number): { h: number; s: number; v: number } {
+  const rn = r / 255;
+  const gn = g / 255;
+  const bn = b / 255;
+  const max = Math.max(rn, gn, bn);
+  const min = Math.min(rn, gn, bn);
+  const delta = max - min;
+  const v = max;
+  const s = max === 0 ? 0 : delta / max;
+
+  let h = 0;
+  if (delta !== 0) {
+    if (max === rn) h = ((gn - bn) / delta) % 6;
+    else if (max === gn) h = (bn - rn) / delta + 2;
+    else h = (rn - gn) / delta + 4;
+    h *= 60;
+    if (h < 0) h += 360;
+  }
+  return { h, s, v };
+}
+
 /**
- * Fast quality gate on a downscaled JPEG.
- * Rejects dark/bright/blank images so we do not invent disease advice.
+ * Cassava leaves (healthy or diseased) are dominated by green / yellow-green
+ * tones where the green channel is never far behind red. This is a loose
+ * heuristic, not a leaf detector — it cannot tell a cassava leaf apart from
+ * any other green/yellow object (grass, another plant, a green shirt) — but
+ * it does reliably catch obviously-wrong warm-toned photos (vehicles, skin,
+ * wood, brick, rust, sunsets) where red clearly dominates green.
+ */
+function isPlantLikeColor(r: number, g: number, b: number): boolean {
+  const { h, s, v } = rgbToHsv(r, g, b);
+  if (s < 0.18 || v < 0.08 || v > 0.97) return false;
+  // Real foliage (even yellowing/diseased) keeps green at or above red.
+  // Orange/red/brown objects (paint, skin, rust, wood, sunsets) have red
+  // clearly ahead of green — this is what a hue check alone can miss,
+  // since orange and yellow-green hues sit close together on the wheel.
+  if (g < r - 10) return false;
+  return h >= 35 && h <= 170;
+}
+
+const MIN_MEAN_LUMA = 25;
+const MAX_MEAN_LUMA = 240;
+const MIN_LUMA_STD_DEV = 6;
+const MIN_VEGETATION_RATIO = 0.18;
+
+/**
+ * Fast validity + content gate on a downscaled JPEG.
+ * Rejects images that cannot be decoded, are too small, too dark/bright,
+ * essentially blank/blurry (flat), or clearly don't contain leaf-like colors
+ * (i.e. not a plant at all).
  */
 export async function assessImageQuality(imageUri: string): Promise<ImageQualityResult> {
   try {
@@ -60,37 +111,42 @@ export async function assessImageQuality(imageUri: string): Promise<ImageQuality
     }
 
     const decoded = decodeJpeg(base64ToUint8Array(resized.base64), { useTArray: true });
-    const rgba = decoded.data;
     const pixelCount = decoded.width * decoded.height;
     if (pixelCount < 100) {
       return { ok: false, code: 'too_small', message: REJECT_MESSAGES.too_small };
     }
 
-    let sum = 0;
-    let sumSq = 0;
+    const data = decoded.data;
+    let sumLuma = 0;
+    let sumLumaSq = 0;
+    let vegetationCount = 0;
+
     for (let i = 0; i < pixelCount; i++) {
-      const r = rgba[i * 4] ?? 0;
-      const g = rgba[i * 4 + 1] ?? 0;
-      const b = rgba[i * 4 + 2] ?? 0;
-      // Perceived luminance
-      const y = 0.299 * r + 0.587 * g + 0.114 * b;
-      sum += y;
-      sumSq += y * y;
+      const r = data[i * 4] ?? 0;
+      const g = data[i * 4 + 1] ?? 0;
+      const b = data[i * 4 + 2] ?? 0;
+      const luma = 0.299 * r + 0.587 * g + 0.114 * b;
+      sumLuma += luma;
+      sumLumaSq += luma * luma;
+      if (isPlantLikeColor(r, g, b)) vegetationCount++;
     }
 
-    const mean = sum / pixelCount;
-    const variance = sumSq / pixelCount - mean * mean;
-    const std = Math.sqrt(Math.max(0, variance));
+    const meanLuma = sumLuma / pixelCount;
+    const variance = Math.max(0, sumLumaSq / pixelCount - meanLuma * meanLuma);
+    const lumaStdDev = Math.sqrt(variance);
+    const vegetationRatio = vegetationCount / pixelCount;
 
-    if (mean < 28) {
+    if (meanLuma < MIN_MEAN_LUMA) {
       return { ok: false, code: 'too_dark', message: REJECT_MESSAGES.too_dark };
     }
-    if (mean > 235) {
+    if (meanLuma > MAX_MEAN_LUMA) {
       return { ok: false, code: 'too_bright', message: REJECT_MESSAGES.too_bright };
     }
-    // Very low contrast → blank wall, solid color, heavy blur, non-leaf junk
-    if (std < 12) {
+    if (lumaStdDev < MIN_LUMA_STD_DEV) {
       return { ok: false, code: 'too_flat', message: REJECT_MESSAGES.too_flat };
+    }
+    if (vegetationRatio < MIN_VEGETATION_RATIO) {
+      return { ok: false, code: 'not_leaf', message: REJECT_MESSAGES.not_leaf };
     }
 
     return { ok: true };

@@ -7,17 +7,15 @@ import {
   StatusBar,
   Image,
   ScrollView,
-  ActivityIndicator,
   Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
-import * as FileSystem from 'expo-file-system/legacy';
+import * as Speech from 'expo-speech';
 import { COLORS, RADIUS, SHADOW } from '../constants/theme';
 import { DISEASE_CHROME } from '../constants/diseaseChrome';
 import type { RootStackParamList } from '../navigation/types';
-import { getSecondOpinion, type GeminiAdvice } from '../services/gemini';
 import { saveScanToHistory } from '../services/scanHistory';
 import { useLanguage } from '../i18n/LanguageContext';
 
@@ -53,12 +51,36 @@ export default function ResultScreen({ navigation, route }: Props) {
   const { t } = useLanguage();
   const { imageUri, classifierResult, fromHistory } = route.params;
   const rejected = Boolean(classifierResult.rejected);
-  const info = t.diseases[classifierResult.disease];
-  const chrome = DISEASE_CHROME[classifierResult.disease];
+  const displayedDisease = classifierResult.disease;
+  const info = t.diseases[displayedDisease];
+  const chrome = DISEASE_CHROME[displayedDisease];
   const palette = COLOR_MAP[chrome.color];
-  const [aiOpinion, setAiOpinion] = useState<GeminiAdvice | null>(null);
-  const [loadingAI, setLoadingAI] = useState(false);
-  const [showMore, setShowMore] = useState(false);
+  const [showMore, setShowMore] = useState(classifierResult.offlineModelAvailable === false);
+  const [isReading, setIsReading] = useState(false);
+
+  useEffect(() => {
+    return () => {
+      Speech.stop();
+    };
+  }, []);
+
+  function toggleReadAloud() {
+    if (isReading) {
+      Speech.stop();
+      setIsReading(false);
+      return;
+    }
+
+    const summary = `${info.label}. ${info.action}. ${t.confidence}: ${Math.round(
+      classifierResult.confidence * 100
+    )} percent. ${info.advice}`;
+    setIsReading(true);
+    Speech.speak(summary, {
+      onDone: () => setIsReading(false),
+      onStopped: () => setIsReading(false),
+      onError: () => setIsReading(false),
+    });
+  }
 
   useEffect(() => {
     if (!fromHistory && !rejected) {
@@ -67,41 +89,11 @@ export default function ResultScreen({ navigation, route }: Props) {
         disease: classifierResult.disease,
         confidence: classifierResult.confidence,
         rejected: false,
-      }).catch(() => undefined);
+      })
+        .then(() => undefined)
+        .catch(() => undefined);
     }
   }, []);
-
-  useEffect(() => {
-    if (rejected || fromHistory) return;
-    // Prefetch AI only when the offline result is uncertain / disease-risk
-    if (classifierResult.needsCloudAdvice) {
-      fetchAIOpinion();
-    }
-  }, []);
-
-  async function fetchAIOpinion() {
-    if (rejected) return;
-    setLoadingAI(true);
-    try {
-      const base64 = await FileSystem.readAsStringAsync(imageUri, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
-      const opinion = await getSecondOpinion(
-        base64,
-        info.label,
-        classifierResult.confidence,
-        {
-          topTwoDelta: classifierResult.topTwoDelta,
-          needsCloudAdvice: classifierResult.needsCloudAdvice,
-        }
-      );
-      setAiOpinion(opinion);
-    } catch {
-      setAiOpinion(null);
-    } finally {
-      setLoadingAI(false);
-    }
-  }
 
   if (rejected) {
     return (
@@ -126,9 +118,11 @@ export default function ResultScreen({ navigation, route }: Props) {
                     ? t.rejectTooBright
                     : classifierResult.rejectCode === 'too_flat'
                       ? t.rejectTooFlat
-                      : classifierResult.rejectCode === 'decode_failed'
-                        ? t.rejectDecode
-                        : classifierResult.rejectReason ?? t.rejectDecode}
+                      : classifierResult.rejectCode === 'not_leaf'
+                        ? t.rejectNotLeaf
+                        : classifierResult.rejectCode === 'decode_failed'
+                          ? t.rejectDecode
+                          : classifierResult.rejectReason ?? t.rejectDecode}
             </Text>
           </View>
 
@@ -189,6 +183,24 @@ export default function ResultScreen({ navigation, route }: Props) {
           {!classifierResult.isConfident && (
             <Text style={styles.lowConfidenceNote}>{t.lowConfidence}</Text>
           )}
+
+          {classifierResult.offlineModelAvailable === false && (
+            <Text style={styles.debugNote}>
+              Offline model unavailable{classifierResult.offlineFailureReason ? `: ${classifierResult.offlineFailureReason}` : '.'}
+            </Text>
+          )}
+
+          <TouchableOpacity
+            style={styles.readButton}
+            onPress={toggleReadAloud}
+            accessibilityRole="button"
+            accessibilityLabel={isReading ? t.stopReading : t.readResult}
+          >
+            <Text style={styles.readButtonText}>
+              {isReading ? '■  ' : '🔊  '}
+              {isReading ? t.stopReading : t.readResult}
+            </Text>
+          </TouchableOpacity>
         </View>
 
         <View style={[styles.adviceCard, SHADOW.small]}>
@@ -217,30 +229,6 @@ export default function ResultScreen({ navigation, route }: Props) {
               <Text style={styles.adviceText}>{info.treatment}</Text>
             </View>
 
-            <View style={[styles.aiCard, SHADOW.small]}>
-              <Text style={styles.aiTitle}>{t.aiAdvice}</Text>
-              {loadingAI ? (
-                <View style={styles.aiLoading}>
-                  <ActivityIndicator size="small" color={COLORS.primary} />
-                  <Text style={styles.aiLoadingText}>{t.gettingAdvice}</Text>
-                </View>
-              ) : aiOpinion ? (
-                <View>
-                  <Text style={styles.aiMeta}>
-                    {aiOpinion.primary_diagnosis.replaceAll('_', ' ')} · severity{' '}
-                    {aiOpinion.severity_score}/5
-                  </Text>
-                  <Text style={styles.aiText}>{aiOpinion.displayText}</Text>
-                </View>
-              ) : (
-                <View>
-                  <Text style={styles.aiOfflineText}>{t.aiNeedsInternet}</Text>
-                  <TouchableOpacity onPress={fetchAIOpinion} style={styles.retryAi}>
-                    <Text style={styles.retryAiText}>{t.tryAi}</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-            </View>
           </>
         )}
 
@@ -317,6 +305,21 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontWeight: '500',
   },
+  debugNote: {
+    marginTop: 8,
+    fontSize: 11,
+    color: COLORS.grey,
+    textAlign: 'center',
+  },
+  readButton: {
+    marginTop: 16,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+    borderRadius: RADIUS.full,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+  },
+  readButtonText: { color: COLORS.primary, fontSize: 14, fontWeight: '700' },
   adviceCard: {
     backgroundColor: COLORS.white,
     borderRadius: RADIUS.lg,
@@ -327,35 +330,15 @@ const styles = StyleSheet.create({
   adviceText: { fontSize: 14, color: COLORS.textSecondary, lineHeight: 21 },
   moreToggle: {
     backgroundColor: COLORS.white,
-    borderRadius: RADIUS.full,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    borderRadius: RADIUS.md,
+    padding: 14,
     marginBottom: 12,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  moreToggleText: { fontSize: 14, fontWeight: '600', color: COLORS.primary },
+  moreToggleText: { color: COLORS.primary, fontWeight: '700', fontSize: 14 },
   moreChevron: { fontSize: 14, color: COLORS.primary },
-  aiCard: {
-    backgroundColor: COLORS.white,
-    borderRadius: RADIUS.lg,
-    padding: 16,
-    marginBottom: 16,
-  },
-  aiTitle: { fontSize: 15, fontWeight: '700', color: COLORS.text, marginBottom: 8 },
-  aiMeta: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: COLORS.primary,
-    marginBottom: 8,
-  },
-  aiLoading: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  aiLoadingText: { color: COLORS.grey, fontSize: 14 },
-  aiText: { fontSize: 14, color: COLORS.textSecondary, lineHeight: 21 },
-  aiOfflineText: { fontSize: 14, color: COLORS.grey, lineHeight: 21 },
-  retryAi: { marginTop: 10 },
-  retryAiText: { color: COLORS.primary, fontWeight: '700', fontSize: 14 },
   actions: { gap: 10, marginTop: 4 },
   actionBtn: {
     borderRadius: RADIUS.full,

@@ -31,13 +31,11 @@ export const en: UiStrings = {
   lowConfidence: 'Low confidence — prefer a clearer daylight photo if you can.',
   whatToDoNow: 'What to do now',
   prevention: 'Prevention',
-  moreTips: 'Treatment & AI tips',
+  moreTips: 'Treatment tips',
   hideTips: 'Hide extra tips',
   treatmentNote: 'Treatment note',
-  aiAdvice: 'AI advice',
-  gettingAdvice: 'Getting advice...',
-  aiNeedsInternet: 'AI tips need internet. Offline steps above still apply.',
-  tryAi: 'Try AI advice',
+  readResult: 'Read result aloud',
+  stopReading: 'Stop reading',
   scanAnother: 'Scan another',
   askMoreHelp: 'Ask for more help',
   photoNotUsable: 'Photo not usable',
@@ -50,7 +48,17 @@ export const en: UiStrings = {
   rejectTooBright: 'Photo is too bright / washed out. Avoid direct flash glare.',
   rejectTooFlat:
     'This does not look like a useful leaf photo. Retake with one cassava leaf filling the frame.',
+  rejectNotLeaf:
+    'This does not look like a cassava leaf. Point the camera at one leaf so it fills the frame.',
   rejectDecode: 'Could not read this image. Try another photo.',
+  notCassavaTitle: 'Not a Cassava Photo',
+  notCassavaFallbackMessage:
+    'This photo does not look like a cassava leaf, so we cannot give disease advice on it.',
+  confirmLeafTitle: 'Is this a cassava leaf?',
+  confirmLeafMessage:
+    'Only photos of a real cassava leaf give accurate results. Photos of anything else (people, objects, screens, other plants) will give a wrong diagnosis.',
+  confirmLeafCancel: 'Cancel, pick another photo',
+  confirmLeafContinue: "Yes, it's a cassava leaf",
 
   historyTitle: 'Recent scans',
   clear: 'Clear',
@@ -61,12 +69,11 @@ export const en: UiStrings = {
   noScansSub: 'After you scan a leaf, the last few results stay here on this phone.',
 
   chatTitle: 'Agrisos Assistant',
-  chatSub: 'Powered by Gemini AI',
+  chatSub: 'Works offline on this phone',
   chatWelcome:
     "Hello! I'm your Agrisos farming assistant. Ask me what to do about CMD, CBSD, prevention, clean cuttings, or whiteflies.",
   chatPlaceholder: 'Type your question...',
-  chatOffline:
-    "I couldn't reach the AI helper right now. Check your internet and try again. Meanwhile, use the scan result screen — it already shows offline steps.",
+  chatOffline: 'Use the scan result and its practical steps for more guidance.',
 
   diseases: {
     cmd: {

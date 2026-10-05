@@ -1,4 +1,5 @@
 import * as ImageManipulator from 'expo-image-manipulator';
+import { Asset } from 'expo-asset';
 import { Image } from 'react-native';
 import { loadTensorflowModel, type ModelSource } from 'react-native-fast-tflite';
 import type { DiseaseKey } from '../constants/strings';
@@ -33,6 +34,11 @@ const CONFIDENCE_THRESHOLD = TFLITE_MODEL_CONFIG.confidenceThreshold;
 
 let modelPromise: Promise<TensorflowModel | null> | null = null;
 let hasLoggedModelInfo = false;
+let lastTfliteError = 'Unknown TFLite error';
+
+export function getLastTfliteError(): string {
+  return lastTfliteError;
+}
 
 function base64ToUint8Array(base64: string): Uint8Array {
   const atobFn = globalThis.atob;
@@ -104,9 +110,32 @@ function normalizeConfidence(raw: number, maybeHasLogits: boolean): number {
   return clamp01(sigmoid);
 }
 
-function getModelSource(): ModelSource | null {
+/**
+ * Resolve the bundled `.tflite` asset to a real `file://` URI via `expo-asset`.
+ *
+ * `react-native-fast-tflite` can accept a raw `require(...)` module id, but on
+ * Android release builds `Image.resolveAssetSource()` sometimes returns a bare
+ * resource name (e.g. `src_assets_model`) instead of a URI with a protocol for
+ * non-image assets, which crashes with `MalformedURLException: no protocol`.
+ * Resolving through `expo-asset` guarantees a proper local file URI in both
+ * dev and production builds.
+ */
+async function resolveBundledModelUri(): Promise<string> {
+  const asset = Asset.fromModule(bundledModel);
+  if (!asset.localUri) {
+    await asset.downloadAsync();
+  }
+  const uri = asset.localUri ?? asset.uri;
+  if (!uri) {
+    throw new Error('Could not resolve bundled TFLite model asset to a local URI');
+  }
+  return uri;
+}
+
+async function getModelSource(): Promise<ModelSource | null> {
   if (TFLITE_MODEL_CONFIG.useBundledModel) {
-    return bundledModel;
+    const uri = await resolveBundledModelUri();
+    return { url: uri };
   }
   if (TFLITE_MODEL_CONFIG.modelUrl) {
     return { url: TFLITE_MODEL_CONFIG.modelUrl };
@@ -121,13 +150,21 @@ function getImageSize(uri: string): Promise<{ width: number; height: number }> {
 }
 
 async function getModel(): Promise<TensorflowModel | null> {
-  const source = getModelSource();
-  if (!source) return null;
   if (modelPromise) return modelPromise;
 
-  modelPromise = loadTensorflowModel(source, [])
-    .then((m) => m as TensorflowModel)
-    .catch(() => null);
+  modelPromise = getModelSource()
+    .then((source) => {
+      if (!source) {
+        lastTfliteError = 'No bundled or remote TFLite model is configured';
+        return null;
+      }
+      return loadTensorflowModel(source, []).then((m) => m as TensorflowModel);
+    })
+    .catch((err) => {
+      lastTfliteError = err instanceof Error ? err.message : String(err);
+      console.warn('[TFLite] Model load error:', lastTfliteError);
+      return null;
+    });
 
   return modelPromise;
 }
@@ -277,6 +314,7 @@ export async function runTfliteClassifier(imageUri: string): Promise<TfliteClass
 
     const inputBuffer = await preprocessImageToInputBuffer(imageUri, model);
     if (!inputBuffer) {
+      lastTfliteError = 'Image preprocessing returned no input buffer';
       console.warn('[TFLite] Preprocess failed for', imageUri);
       return null;
     }
@@ -286,6 +324,7 @@ export async function runTfliteClassifier(imageUri: string): Promise<TfliteClass
 
     const interpreted = interpretFirstOutput(output0);
     if (!interpreted) {
+      lastTfliteError = 'Model output could not be interpreted';
       console.warn('[TFLite] Could not interpret output', output0);
       return null;
     }
@@ -293,6 +332,7 @@ export async function runTfliteClassifier(imageUri: string): Promise<TfliteClass
     const { classIndex, confidence, scores, topTwoDelta } = interpreted;
     const disease = CLASS_MAP[classIndex];
     if (!disease) {
+      lastTfliteError = `Model returned unsupported class index ${classIndex}`;
       console.warn('[TFLite] Class index out of range', classIndex);
       return null;
     }
@@ -305,6 +345,7 @@ export async function runTfliteClassifier(imageUri: string): Promise<TfliteClass
       topTwoDelta,
     };
   } catch (err) {
+    lastTfliteError = err instanceof Error ? err.message : String(err);
     console.warn('[TFLite] Classifier error:', err);
     return null;
   }

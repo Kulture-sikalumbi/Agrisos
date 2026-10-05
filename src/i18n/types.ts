@@ -54,10 +54,8 @@ export type UiStrings = {
   moreTips: string;
   hideTips: string;
   treatmentNote: string;
-  aiAdvice: string;
-  gettingAdvice: string;
-  aiNeedsInternet: string;
-  tryAi: string;
+  readResult: string;
+  stopReading: string;
   scanAnother: string;
   askMoreHelp: string;
   photoNotUsable: string;
@@ -68,7 +66,14 @@ export type UiStrings = {
   rejectTooDark: string;
   rejectTooBright: string;
   rejectTooFlat: string;
+  rejectNotLeaf: string;
   rejectDecode: string;
+  notCassavaTitle: string;
+  notCassavaFallbackMessage: string;
+  confirmLeafTitle: string;
+  confirmLeafMessage: string;
+  confirmLeafCancel: string;
+  confirmLeafContinue: string;
 
   historyTitle: string;
   clear: string;

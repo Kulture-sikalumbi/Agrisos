@@ -108,7 +108,6 @@ export default function HistoryScreen({ navigation }: Props) {
                       disease: item.disease,
                       confidence: item.confidence,
                       isConfident: item.confidence >= 0.75,
-                      needsCloudAdvice: false,
                     },
                     fromHistory: true,
                   })

@@ -40,13 +40,11 @@ export const bem: UiStrings = {
   lowConfidence: 'Tacishininkishiwe sana — pinga ichikope limbi mu lusuba.',
   whatToDoNow: 'Ico mwingachita nomba',
   prevention: 'Ukukana',
-  moreTips: 'Umutengo na AI',
+  moreTips: 'Ifyo mungacitila',
   hideTips: 'Fisa ifimbi',
   treatmentNote: 'Ifyo mungacitila',
-  aiAdvice: 'Amalangililo ya AI',
-  gettingAdvice: 'Ileleta amalangililo...',
-  aiNeedsInternet: 'AI ilefwaya internet. Amalangililo yapa phone yonse mulemona.',
-  tryAi: 'Esha AI',
+  readResult: 'Umfwa icishiliko',
+  stopReading: 'Imya ukubelenga',
   scanAnother: 'Sanga limbi',
   askMoreHelp: 'Ipusheni ubwafwilisho',
   photoNotUsable: 'Ichikope tacinga',
@@ -58,7 +56,18 @@ export const bem: UiStrings = {
   rejectTooDark: 'Ichikope ni ifita. Pangeni limbi mu lusuba.',
   rejectTooBright: 'Ichikope na chibuta sana.',
   rejectTooFlat: 'ichikope icho tachiweme ehseni nakabili',
+  // TODO: have a native Bemba speaker review this string (see docs/THREAD_HANDOFF.md).
+  rejectNotLeaf: 'Ici ichikope tacilanga tute. Sontekeni camera pe bula lya tute limo ukwisula mwi bala.',
   rejectDecode: 'Nafilwa ukusanga ubulwele',
+  // TODO: have a native Bemba speaker review these strings (see docs/THREAD_HANDOFF.md).
+  notCassavaTitle: 'Te Chikope ca Tute',
+  notCassavaFallbackMessage:
+    'Ici ichikope tacilanga bula lya tute, eico tatwingapeela amashiwi ya bulwele pali ici.',
+  confirmLeafTitle: 'Bushe ili ni bula lya tute?',
+  confirmLeafMessage:
+    'Ni fikope fya bula lya tute fye ifingapeela ifisuma. Ifikope fya bantu, ifintu, screen, nangu ifimenwa fimbi fikapeela amasuku yabipa.',
+  confirmLeafCancel: 'Cancel, saleni ichikope cimbi',
+  confirmLeafContinue: 'Ee, ili ni bula lya tute',
 
   historyTitle: 'History',
   clear: 'Futa',
@@ -69,12 +78,11 @@ export const bem: UiStrings = {
   noScansSub: 'Nomba mwasinga icisabo, ifyo fyali fileikalapo pa phone.',
 
   chatTitle: 'Ubwafwilisho bwa Agrisos',
-  chatSub: 'Na Gemini AI',
+  chatSub: 'Ilingile pa foni, na internet tefyo ifwayika',
   chatWelcome:
     'Mwapoleni! Nine ubwafwilisho bwa Agrisos. kuti mwanjipusha  pali CMD, CBSD, yonse amalwele ya tute',
   chatPlaceholder: 'Lembeni umepusho...',
-  chatOffline:
-    'Nafilwa ukulanda na AI. Takuli internet. ',
+  chatOffline: 'Mulemona ifyo mungachita pa ciputulwa ca cishiliko.',
 
   diseases: {
     cmd: {
