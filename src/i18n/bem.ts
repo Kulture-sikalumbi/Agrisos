@@ -83,6 +83,15 @@ export const bem: UiStrings = {
     'Mwapoleni! Nine ubwafwilisho bwa Agrisos. kuti mwanjipusha  pali CMD, CBSD, yonse amalwele ya tute',
   chatPlaceholder: 'Lembeni umepusho...',
   chatOffline: 'Mulemona ifyo mungachita pa ciputulwa ca cishiliko.',
+  chatGreetingReply: 'Mwapoleni! Ninga bwafwilisha pali CMD, CBSD, amashina yasuma, ifimonwa pa mabula, no kukana ubulwele.',
+  chatOfficerReply: 'Pa bulwele ubwingi nangu tacishinka, beleni ku ZARI: 0211278130 nangu 0211278390. Inambala shili pa contact card.',
+  contactTitle: 'Mufwaya extension officer?',
+  contactSubtitle: 'Imbilaneni nangu kopini inambala ya ZARI pa bwafwilisho bwa tute.',
+  contactCall: 'Imbila',
+  contactCopy: 'Kopini',
+  contactCopied: 'Inambala yakopwa',
+  contactCallUnavailable: 'Ukubila takwaba pa foni iyi.',
+  contactEmail: 'Email',
 
   diseases: {
     cmd: {

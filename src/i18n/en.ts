@@ -74,6 +74,15 @@ export const en: UiStrings = {
     "Hello! I'm your Agrisos farming assistant. Ask me what to do about CMD, CBSD, prevention, clean cuttings, or whiteflies.",
   chatPlaceholder: 'Type your question...',
   chatOffline: 'Use the scan result and its practical steps for more guidance.',
+  chatGreetingReply: 'Hello! I can help with CMD, CBSD, healthy planting material, insects, symptoms, and field prevention. Ask me one of those questions.',
+  chatOfficerReply: 'For a serious, unclear, or spreading problem, contact ZARI: 0211278130 or 0211278390. You can call or copy these numbers from the contact card.',
+  contactTitle: 'Need an extension officer?',
+  contactSubtitle: 'Call or copy a ZARI number for cassava guidance.',
+  contactCall: 'Call',
+  contactCopy: 'Copy',
+  contactCopied: 'Number copied',
+  contactCallUnavailable: 'Calling is not available on this device.',
+  contactEmail: 'Email',
 
   diseases: {
     cmd: {

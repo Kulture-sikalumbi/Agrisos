@@ -10,6 +10,7 @@ import ErrorBoundary from './src/components/ErrorBoundary';
 import { LanguageProvider } from './src/i18n/LanguageContext';
 import { RootStackParamList } from './src/navigation/types';
 import { checkForOtaUpdate } from './src/services/ota';
+import { ThemeProvider } from './src/theme/ThemeContext';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -53,9 +54,11 @@ export default function App() {
     <GestureHandlerRootView style={styles.root}>
       <SafeAreaProvider>
         <ErrorBoundary>
-          <LanguageProvider>
-            <RootNavigation />
-          </LanguageProvider>
+          <ThemeProvider>
+            <LanguageProvider>
+              <RootNavigation />
+            </LanguageProvider>
+          </ThemeProvider>
         </ErrorBoundary>
       </SafeAreaProvider>
     </GestureHandlerRootView>

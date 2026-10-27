@@ -3,27 +3,33 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { COLORS, RADIUS } from '../constants/theme';
 import { useLanguage } from '../i18n/LanguageContext';
 import type { AppLanguage } from '../i18n/types';
+import { useTheme } from '../theme/ThemeContext';
 
 /** Compact 3-option language switcher for farmers. */
 export default function LanguagePicker() {
   const { language, setLanguage, options, t } = useLanguage();
+  const { colors } = useTheme();
 
   return (
     <View style={styles.wrap} accessibilityRole="radiogroup">
-      <Text style={styles.label}>{t.language}</Text>
+      <Text style={[styles.label, { color: colors.grey }]}>{t.language}</Text>
       <View style={styles.row}>
         {options.map((opt) => {
           const active = language === opt.code;
           return (
             <TouchableOpacity
               key={opt.code}
-              style={[styles.chip, active && styles.chipActive]}
+              style={[
+                styles.chip,
+                { backgroundColor: colors.card, borderColor: colors.border },
+                active && { backgroundColor: colors.primary, borderColor: colors.primary },
+              ]}
               onPress={() => setLanguage(opt.code as AppLanguage)}
               accessibilityRole="radio"
               accessibilityState={{ selected: active }}
               accessibilityLabel={opt.nativeLabel}
             >
-              <Text style={[styles.chipText, active && styles.chipTextActive]}>
+              <Text style={[styles.chipText, { color: colors.primary }, active && styles.chipTextActive]}>
                 {opt.nativeLabel}
               </Text>
             </TouchableOpacity>

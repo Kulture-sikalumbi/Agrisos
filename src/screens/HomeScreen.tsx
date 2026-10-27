@@ -17,7 +17,10 @@ import type { RootStackParamList } from '../navigation/types';
 import { classifyImage } from '../services/classifier';
 import { useLanguage } from '../i18n/LanguageContext';
 import LanguagePicker from '../components/LanguagePicker';
+import ExtensionContactCard from '../components/ExtensionContactCard';
 import { confirmCassavaLeafPhoto } from '../utils/confirmCassavaPhoto';
+import ThemeToggle from '../components/ThemeToggle';
+import { useTheme } from '../theme/ThemeContext';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Home'>;
@@ -25,6 +28,7 @@ type Props = {
 
 export default function HomeScreen({ navigation }: Props) {
   const { t } = useLanguage();
+  const { colors } = useTheme();
   const [analyzing, setAnalyzing] = useState(false);
 
   async function pickFromGallery() {
@@ -60,24 +64,27 @@ export default function HomeScreen({ navigation }: Props) {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={COLORS.primaryDark} />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle="light-content" backgroundColor={colors.primaryDark} />
       <ScrollView
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
         bounces={false}
       >
         <View style={styles.header}>
-          <Text style={styles.appName}>🌿 {t.appName}</Text>
-          <Text style={styles.tagline}>{t.tagline}</Text>
+          <Text style={[styles.appName, { color: colors.primaryDark }]}>🌿 {t.appName}</Text>
+          <Text style={[styles.tagline, { color: colors.grey }]}>{t.tagline}</Text>
+          <View style={styles.themeToggle}>
+            <ThemeToggle />
+          </View>
         </View>
 
         <LanguagePicker />
 
-        <View style={styles.heroCard}>
+        <View style={[styles.heroCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <Text style={styles.heroEmoji}>🍃</Text>
-          <Text style={styles.heroTitle}>{t.heroTitle}</Text>
-          <Text style={styles.heroSub}>{t.heroSub}</Text>
+          <Text style={[styles.heroTitle, { color: colors.text }]}>{t.heroTitle}</Text>
+          <Text style={[styles.heroSub, { color: colors.textSecondary }]}>{t.heroSub}</Text>
         </View>
 
         <View style={styles.legendRow}>
@@ -130,6 +137,8 @@ export default function HomeScreen({ navigation }: Props) {
           <Text style={styles.chatButtonText}>💬  {t.askAssistant}</Text>
         </TouchableOpacity>
 
+        <ExtensionContactCard />
+
         <TouchableOpacity
           style={styles.historyLink}
           activeOpacity={0.85}
@@ -163,6 +172,7 @@ const styles = StyleSheet.create({
     paddingBottom: 28,
   },
   header: { marginTop: 20, alignItems: 'center' },
+  themeToggle: { marginTop: 12 },
   appName: {
     fontSize: 32,
     fontWeight: '800',

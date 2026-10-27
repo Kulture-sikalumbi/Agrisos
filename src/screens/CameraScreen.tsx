@@ -18,6 +18,7 @@ import type { RootStackParamList } from '../navigation/types';
 import { classifyImage } from '../services/classifier';
 import { useLanguage } from '../i18n/LanguageContext';
 import { confirmCassavaLeafPhoto } from '../utils/confirmCassavaPhoto';
+import { useTheme } from '../theme/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
@@ -27,6 +28,7 @@ type Props = {
 
 export default function CameraScreen({ navigation }: Props) {
   const { t } = useLanguage();
+  const { colors } = useTheme();
   const [permission, requestPermission] = useCameraPermissions();
   const [analyzing, setAnalyzing] = useState(false);
   const cameraRef = useRef<CameraView>(null);
@@ -78,7 +80,7 @@ export default function CameraScreen({ navigation }: Props) {
 
   if (!permission.granted) {
     return (
-      <SafeAreaView style={styles.permissionContainer}>
+      <SafeAreaView style={[styles.permissionContainer, { backgroundColor: colors.background }]}>
         <TouchableOpacity
           style={styles.permissionBack}
           onPress={() => navigation.goBack()}
@@ -87,8 +89,8 @@ export default function CameraScreen({ navigation }: Props) {
           <Text style={styles.permissionBackText}>← {t.back}</Text>
         </TouchableOpacity>
         <Text style={styles.permissionEmoji}>📷</Text>
-        <Text style={styles.permissionTitle}>{t.cameraNeededTitle}</Text>
-        <Text style={styles.permissionSub}>{t.cameraNeededSub}</Text>
+        <Text style={[styles.permissionTitle, { color: colors.text }]}>{t.cameraNeededTitle}</Text>
+        <Text style={[styles.permissionSub, { color: colors.textSecondary }]}>{t.cameraNeededSub}</Text>
         <TouchableOpacity style={styles.grantButton} onPress={requestPermission}>
           <Text style={styles.grantButtonText}>{t.allowCamera}</Text>
         </TouchableOpacity>
@@ -100,7 +102,7 @@ export default function CameraScreen({ navigation }: Props) {
           {analyzing ? (
             <ActivityIndicator color={COLORS.primary} />
           ) : (
-            <Text style={styles.galleryFallbackText}>🖼️  {t.permissionGallery}</Text>
+            <Text style={[styles.galleryFallbackText, { color: colors.primary }]}>🖼️  {t.permissionGallery}</Text>
           )}
         </TouchableOpacity>
       </SafeAreaView>

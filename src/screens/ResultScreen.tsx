@@ -18,6 +18,8 @@ import { DISEASE_CHROME } from '../constants/diseaseChrome';
 import type { RootStackParamList } from '../navigation/types';
 import { saveScanToHistory } from '../services/scanHistory';
 import { useLanguage } from '../i18n/LanguageContext';
+import ExtensionContactCard from '../components/ExtensionContactCard';
+import { useTheme } from '../theme/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
@@ -49,6 +51,7 @@ const COLOR_MAP = {
 
 export default function ResultScreen({ navigation, route }: Props) {
   const { t } = useLanguage();
+  const { colors } = useTheme();
   const { imageUri, classifierResult, fromHistory } = route.params;
   const rejected = Boolean(classifierResult.rejected);
   const displayedDisease = classifierResult.disease;
@@ -76,6 +79,7 @@ export default function ResultScreen({ navigation, route }: Props) {
     )} percent. ${info.advice}`;
     setIsReading(true);
     Speech.speak(summary, {
+      rate: 1.25,
       onDone: () => setIsReading(false),
       onStopped: () => setIsReading(false),
       onError: () => setIsReading(false),
@@ -97,8 +101,8 @@ export default function ResultScreen({ navigation, route }: Props) {
 
   if (rejected) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: COLORS.yellowPale }]}>
-        <StatusBar barStyle="dark-content" backgroundColor={COLORS.yellowPale} />
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.yellowPale }]}>
+        <StatusBar barStyle="dark-content" backgroundColor={colors.yellowPale} />
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
           <TouchableOpacity style={styles.backBtn} onPress={() => navigation.navigate('Home')}>
             <Text style={styles.backText}>← {t.backHome}</Text>
@@ -106,7 +110,7 @@ export default function ResultScreen({ navigation, route }: Props) {
 
           <Image source={{ uri: imageUri }} style={styles.leafImage} resizeMode="cover" />
 
-          <View style={[styles.resultCard, SHADOW.medium]}>
+          <View style={[styles.resultCard, SHADOW.medium, { backgroundColor: colors.card }]}>
             <Text style={styles.trafficEmoji}>🟡</Text>
             <Text style={[styles.diseaseName, { color: COLORS.yellow }]}>{t.photoNotUsable}</Text>
             <Text style={styles.actionText}>
@@ -126,9 +130,9 @@ export default function ResultScreen({ navigation, route }: Props) {
             </Text>
           </View>
 
-          <View style={[styles.adviceCard, SHADOW.small]}>
-            <Text style={styles.adviceTitle}>{t.goodPhotoTitle}</Text>
-            <Text style={styles.adviceText}>{t.goodPhotoSteps}</Text>
+          <View style={[styles.adviceCard, SHADOW.small, { backgroundColor: colors.card }]}>
+            <Text style={[styles.adviceTitle, { color: colors.text }]}>{t.goodPhotoTitle}</Text>
+            <Text style={[styles.adviceText, { color: colors.textSecondary }]}>{t.goodPhotoSteps}</Text>
           </View>
 
           <View style={styles.actions}>
@@ -231,6 +235,8 @@ export default function ResultScreen({ navigation, route }: Props) {
 
           </>
         )}
+
+        <ExtensionContactCard />
 
         <View style={styles.actions}>
           <TouchableOpacity

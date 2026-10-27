@@ -88,6 +88,15 @@ export type UiStrings = {
   chatWelcome: string;
   chatPlaceholder: string;
   chatOffline: string;
+  chatGreetingReply: string;
+  chatOfficerReply: string;
+  contactTitle: string;
+  contactSubtitle: string;
+  contactCall: string;
+  contactCopy: string;
+  contactCopied: string;
+  contactCallUnavailable: string;
+  contactEmail: string;
 
   diseases: Record<DiseaseKey, DiseaseCopy>;
 };

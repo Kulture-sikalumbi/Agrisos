@@ -20,6 +20,7 @@ import {
   type ScanHistoryItem,
 } from '../services/scanHistory';
 import { useLanguage } from '../i18n/LanguageContext';
+import { useTheme } from '../theme/ThemeContext';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'History'>;
@@ -41,6 +42,7 @@ function formatWhen(iso: string): string {
 
 export default function HistoryScreen({ navigation }: Props) {
   const { t } = useLanguage();
+  const { colors } = useTheme();
   const [items, setItems] = useState<ScanHistoryItem[]>([]);
 
   useFocusEffect(
@@ -70,14 +72,14 @@ export default function HistoryScreen({ navigation }: Props) {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={12}>
           <Text style={styles.backText}>← {t.back}</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>{t.historyTitle}</Text>
+        <Text style={[styles.title, { color: colors.text }]}>{t.historyTitle}</Text>
         <TouchableOpacity onPress={confirmClear} disabled={items.length === 0}>
           <Text style={[styles.clearText, items.length === 0 && styles.clearDisabled]}>
             {t.clear}
@@ -99,7 +101,7 @@ export default function HistoryScreen({ navigation }: Props) {
             const info = t.diseases[item.disease];
             return (
               <TouchableOpacity
-                style={[styles.row, SHADOW.small]}
+                style={[styles.row, SHADOW.small, { backgroundColor: colors.card }]}
                 activeOpacity={0.85}
                 onPress={() =>
                   navigation.navigate('Result', {
@@ -115,7 +117,7 @@ export default function HistoryScreen({ navigation }: Props) {
               >
                 <Image source={{ uri: item.imageUri }} style={styles.thumb} />
                 <View style={styles.meta}>
-                  <Text style={styles.disease}>{info.shortLabel}</Text>
+                  <Text style={[styles.disease, { color: colors.text }]}>{info.shortLabel}</Text>
                   <Text style={styles.when}>{formatWhen(item.createdAt)}</Text>
                   <Text style={styles.conf}>
                     {Math.round(item.confidence * 100)}% {t.confidence.toLowerCase()}

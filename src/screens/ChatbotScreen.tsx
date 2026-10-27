@@ -19,6 +19,7 @@ import { COLORS, RADIUS, SHADOW } from '../constants/theme';
 import type { RootStackParamList } from '../navigation/types';
 import { useLanguage } from '../i18n/LanguageContext';
 import type { UiStrings } from '../i18n/types';
+import { useTheme } from '../theme/ThemeContext';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Chatbot'>;
@@ -38,10 +39,19 @@ const QUICK_QUESTIONS = [
   'How do I stop whiteflies spreading disease?',
   'When should I call an extension officer?',
   'How do I keep a healthy field?',
+  'What symptoms should I watch for?',
+  'How far apart should I plant cassava?',
+  'What should I do about insects on leaves?',
 ];
 
 function getOfflineReply(message: string, strings: UiStrings): string {
-  const question = message.toLowerCase();
+  const question = message.toLowerCase().replace(/[^\w\s]/g, ' ');
+  if (/\b(hello|hi|hey|mwapoleni|mulishani)\b/.test(question)) {
+    return strings.chatGreetingReply;
+  }
+  if (question.includes('call') || question.includes('officer') || question.includes('zari') || question.includes('contact')) {
+    return strings.chatOfficerReply;
+  }
   if (question.includes('cmd') || question.includes('mosaic')) {
     return `${strings.diseases.cmd.advice}\n\n${strings.diseases.cmd.prevention}`;
   }
@@ -54,6 +64,15 @@ function getOfflineReply(message: string, strings: UiStrings): string {
   if (question.includes('whitefl')) {
     return strings.diseases.healthy.treatment;
   }
+  if (question.includes('insect') || question.includes('pest') || question.includes('bug')) {
+    return `${strings.diseases.healthy.treatment}\n\n${strings.chatOfficerReply}`;
+  }
+  if (question.includes('symptom') || question.includes('sign') || question.includes('look for')) {
+    return `${strings.diseases.cmd.advice}\n\n${strings.diseases.cbsd.advice}`;
+  }
+  if (question.includes('space') || question.includes('apart') || question.includes('plant')) {
+    return strings.diseases.healthy.prevention;
+  }
   if (question.includes('cutting') || question.includes('stem')) {
     return strings.diseases.healthy.prevention;
   }
@@ -62,6 +81,7 @@ function getOfflineReply(message: string, strings: UiStrings): string {
 
 export default function ChatbotScreen({ navigation, route }: Props) {
   const { t, language } = useLanguage();
+  const { colors } = useTheme();
   const contextMessage = route.params?.contextMessage;
   const [messages, setMessages] = useState<DisplayMessage[]>([]);
   const [input, setInput] = useState('');
@@ -143,11 +163,11 @@ export default function ChatbotScreen({ navigation, route }: Props) {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={COLORS.primaryDark} />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle="light-content" backgroundColor={colors.primaryDark} />
 
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.primary }]}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={styles.backBtn}>←</Text>
         </TouchableOpacity>
@@ -169,7 +189,7 @@ export default function ChatbotScreen({ navigation, route }: Props) {
           data={messages}
           keyExtractor={(item) => item.id}
           renderItem={renderMessage}
-          contentContainerStyle={styles.messagesList}
+          contentContainerStyle={[styles.messagesList, { backgroundColor: colors.background }]}
           onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
           ListFooterComponent={
             loading ? (
@@ -198,13 +218,13 @@ export default function ChatbotScreen({ navigation, route }: Props) {
         </View>
 
         {/* Input bar */}
-        <View style={styles.inputBar}>
+        <View style={[styles.inputBar, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { color: colors.text, backgroundColor: colors.card }]}
             value={input}
             onChangeText={setInput}
             placeholder={t.chatPlaceholder}
-            placeholderTextColor={COLORS.grey}
+            placeholderTextColor={colors.grey}
             multiline
             maxLength={500}
             onSubmitEditing={() => handleSend()}
